@@ -8,7 +8,6 @@ vim.o.showmode = false
 vim.schedule(function()
   vim.o.clipboard = 'unnamedplus'
 end)
-
 vim.o.breakindent = true
 vim.o.undofile = true
 vim.o.ignorecase = true
@@ -76,60 +75,6 @@ require('lazy').setup({
       },
     },
   },
-
-  { -- Useful plugin to show you pending keybinds.
-    'folke/which-key.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
-    opts = {
-      -- delay between pressing a key and opening which-key (milliseconds)
-      -- this setting is independent of vim.o.timeoutlen
-      delay = 0,
-      icons = {
-        -- set icon mappings to true if you have a Nerd Font
-        mappings = vim.g.have_nerd_font,
-        -- If you are using a Nerd Font: set icons.keys to an empty table which will use the
-        -- default which-key.nvim defined Nerd Font icons, otherwise define a string table
-        keys = vim.g.have_nerd_font and {} or {
-          Up = '<Up> ',
-          Down = '<Down> ',
-          Left = '<Left> ',
-          Right = '<Right> ',
-          C = '<C-…> ',
-          M = '<M-…> ',
-          D = '<D-…> ',
-          S = '<S-…> ',
-          CR = '<CR> ',
-          Esc = '<Esc> ',
-          ScrollWheelDown = '<ScrollWheelDown> ',
-          ScrollWheelUp = '<ScrollWheelUp> ',
-          NL = '<NL> ',
-          BS = '<BS> ',
-          Space = '<Space> ',
-          Tab = '<Tab> ',
-          F1 = '<F1>',
-          F2 = '<F2>',
-          F3 = '<F3>',
-          F4 = '<F4>',
-          F5 = '<F5>',
-          F6 = '<F6>',
-          F7 = '<F7>',
-          F8 = '<F8>',
-          F9 = '<F9>',
-          F10 = '<F10>',
-          F11 = '<F11>',
-          F12 = '<F12>',
-        },
-      },
-
-      -- Document existing key chains
-      spec = {
-        { '<leader>s', group = '[S]earch' },
-        { '<leader>t', group = '[T]oggle' },
-        { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
-      },
-    },
-  },
-
   { -- Fuzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
@@ -198,11 +143,7 @@ require('lazy').setup({
       end, { desc = 'Search [Git] files (Cmd+P)' })
     end,
   },
-
-  -- LSP Plugins
   {
-    -- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
-    -- used for completion, annotations and signatures of Neovim apis
     'folke/lazydev.nvim',
     ft = 'lua',
     opts = {
@@ -213,12 +154,15 @@ require('lazy').setup({
     },
   },
   {
+    'seblyng/roslyn.nvim',
+    ---@module 'roslyn.config'
+    ---@type RoslynNvimConfig
+    opts = {},
+  },
+  {
     -- Main LSP Configuration
     'neovim/nvim-lspconfig',
     dependencies = {
-      -- Automatically install LSPs and related tools to stdpath for Neovim
-      -- Mason must be loaded before its dependents so we need to set it up here.
-      -- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
       { 'mason-org/mason.nvim', opts = {} },
       'mason-org/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
@@ -322,11 +266,6 @@ require('lazy').setup({
       }
       local capabilities = require('blink.cmp').get_lsp_capabilities()
       local servers = {
-        denols = {
-          root_dir = require('lspconfig').util.root_pattern { 'deno.json', 'deno.jsonc' },
-          single_file_support = false,
-          settings = {},
-        },
 
         lua_ls = {
           settings = {
@@ -344,6 +283,9 @@ require('lazy').setup({
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
         'prettierd', -- Used to format JS/TS code
+        'csharp-language-server',
+        'csharp_ls',
+        'csharpier',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -356,21 +298,6 @@ require('lazy').setup({
             local server = servers[server_name] or {}
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
             require('lspconfig')[server_name].setup(server)
-          end,
-
-          -- custom handler for ts_ls
-          ['ts_ls'] = function()
-            local util = require 'lspconfig.util'
-            require('lspconfig').ts_ls.setup {
-              root_dir = function(fname)
-                -- skip ts_ls entirely if deno.json present
-                if util.root_pattern('deno.json', 'deno.jsonc')(fname) then
-                  return nil
-                end
-                return util.root_pattern('package.json', 'tsconfig.json')(fname)
-              end,
-              single_file_support = false,
-            }
           end,
         },
       }
@@ -410,6 +337,7 @@ require('lazy').setup({
         typescript = { 'prettierd', 'prettier', stop_after_first = true },
         javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
         typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        csharp = { 'csharpier' },
       },
     },
   },
@@ -439,6 +367,7 @@ require('lazy').setup({
     opts = {
       keymap = {
         preset = 'default',
+        ['<CR>'] = { 'accept', 'fallback' },
       },
 
       appearance = {
