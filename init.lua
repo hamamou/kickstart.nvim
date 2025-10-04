@@ -90,7 +90,7 @@ require('lazy').setup({
       },
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons', enabled = true },
     },
     config = function()
       require('telescope').setup {
@@ -105,34 +105,16 @@ require('lazy').setup({
       pcall(require('telescope').load_extension, 'ui-select')
 
       local builtin = require 'telescope.builtin'
-      vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-      vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
-      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
-      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
-      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
-      vim.keymap.set('n', '<leader>/', function()
+      vim.keymap.set('n', '<leader>sf', function()
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
           winblend = 10,
           previewer = false,
         })
       end, { desc = '[/] Fuzzily search in current buffer' })
-
-      vim.keymap.set('n', '<leader>s/', function()
-        builtin.live_grep {
-          grep_open_files = true,
-          prompt_title = 'Live Grep in Open Files',
-        }
-      end, { desc = '[S]earch [/] in Open Files' })
-
-      vim.keymap.set('n', '<leader>sn', function()
-        builtin.find_files { cwd = vim.fn.stdpath 'config' }
-      end, { desc = '[S]earch [N]eovim files' })
 
       vim.keymap.set('n', '<C-p>', function()
         local ok = pcall(builtin.git_files, { show_untracked = true })
@@ -158,7 +140,6 @@ require('lazy').setup({
     opts = {},
   },
   {
-    -- Main LSP Configuration
     'neovim/nvim-lspconfig',
     dependencies = {
       { 'mason-org/mason.nvim', opts = {} },
@@ -184,9 +165,6 @@ require('lazy').setup({
           map('gi', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
           map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-          map('gO', require('telescope.builtin').lsp_document_symbols, 'Open Document Symbols')
-          map('gW', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Open Workspace Symbols')
-          map('gt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
 
           ---@param client vim.lsp.Client
           ---@param method vim.lsp.protocol.Method
@@ -222,12 +200,6 @@ require('lazy').setup({
                 vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
               end,
             })
-          end
-
-          if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
-            map('<leader>th', function()
-              vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
-            end, '[T]oggle Inlay [H]ints')
           end
         end,
       })
@@ -289,8 +261,8 @@ require('lazy').setup({
 
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
-        'stylua', -- Used to format Lua code
-        'prettierd', -- Used to format JS/TS code
+        'stylua',
+        'prettierd',
         'csharp-language-server',
         'csharp_ls',
       })
@@ -351,13 +323,11 @@ require('lazy').setup({
       },
     },
   },
-
-  { -- Autocompletion
+  {
     'saghen/blink.cmp',
     event = 'VimEnter',
     version = '1.*',
     dependencies = {
-      -- Snippet Engine
       {
         'L3MON4D3/LuaSnip',
         version = '2.*',
@@ -376,8 +346,9 @@ require('lazy').setup({
     --- @type blink.cmp.Config
     opts = {
       keymap = {
-        preset = 'default',
-        ['<CR>'] = { 'accept', 'fallback' },
+        ['<CR>'] = { 'select_and_accept', 'fallback' },
+        ['<C-k>'] = { 'select_prev', 'fallback' },
+        ['<C-j>'] = { 'select_next', 'fallback_to_mappings' },
       },
 
       appearance = {
@@ -402,59 +373,116 @@ require('lazy').setup({
   },
   {
     'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
+    priority = 1000,
     config = function()
       ---@diagnostic disable-next-line: missing-fields
       require('tokyonight').setup {
         styles = {
-          comments = { italic = false }, -- Disable italics in comments
+          comments = { italic = false },
         },
       }
 
       vim.cmd.colorscheme 'tokyonight-night'
     end,
   },
-
-  -- Highlight todo, notes, etc in comments
-  { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
-
-  { -- Collection of various small independent plugins/modules
-    'echasnovski/mini.nvim',
+  {
+    'numToStr/Comment.nvim',
+  },
+  {
+    'nvim-mini/mini.nvim',
+    event = 'VeryLazy',
     config = function()
-      require('mini.ai').setup { n_lines = 500 }
+      require('mini.ai').setup()
       require('mini.surround').setup()
-      local statusline = require 'mini.statusline'
-      statusline.setup { use_icons = true }
-      ---@diagnostic disable-next-line: duplicate-set-field
-      statusline.section_location = function()
-        return '%2l:%-2v'
-      end
+      require('mini.pairs').setup()
+      require('mini.bracketed').setup()
+      require('mini.files').setup()
+      require('mini.statusline').setup {
+        use_icons = true,
+        content = {
+          active = function()
+            local mode, mode_hl = MiniStatusline.section_mode { trunc_width = 120 }
+            local branch = vim.b.gitsigns_head or ''
+            local git_status = vim.b.gitsigns_status_dict or {}
+            local clients = vim.lsp.get_active_clients { bufnr = 0 }
+
+            -- Single + if there are any git modifications
+            local has_git_modifications = (
+              (git_status.added and git_status.added > 0)
+              or (git_status.changed and git_status.changed > 0)
+              or (git_status.removed and git_status.removed > 0)
+            )
+            local git_str = has_git_modifications and ' +' or ''
+
+            -- File path relative to Neovim root (cwd)
+            local filename = vim.fn.expand '%:.'
+            if filename == '' then
+              filename = '[No Name]'
+            end
+
+            -- Active LSP client
+            local lsp = (#clients > 0) and clients[1].name or ''
+
+            -- Line | Column
+            local loc = string.format('%d|%d', vim.fn.line '.', vim.fn.col '.')
+
+            -- Left section: mode | branch | git (+) | filename
+            local left = MiniStatusline.combine_groups {
+              { hl = mode_hl, strings = { mode } },
+              {
+                hl = 'MiniStatuslineDevinfo',
+                strings = {
+                  branch ~= '' and (' ' .. branch .. git_str) or '',
+                },
+              },
+              { hl = 'MiniStatuslineFilename', strings = { ' ' .. filename } },
+            }
+
+            -- Right section: LSP | location
+            local right = MiniStatusline.combine_groups {
+              { hl = 'MiniStatuslineLsp', strings = { lsp } },
+              { hl = 'MiniStatuslineFilename', strings = { loc } },
+            }
+
+            return MiniStatusline.combine_groups {
+              { hl = 'MiniStatuslineModeNormal', strings = { left } },
+              '%=',
+              { hl = 'MiniStatuslineModeNormal', strings = { right } },
+            }
+          end,
+        },
+      }
+      -- require('mini.move').setup()
+
+      vim.keymap.set('n', '<leader>e', function()
+        MiniFiles.open()
+      end, { desc = 'Open MiniFiles' })
     end,
   },
-  { -- Highlight, edit, and navigate code
+  -- {
+  --   'echasnovski/mini.nvim',
+  --   config = function()
+  --     require('mini.ai').setup { n_lines = 500 }
+  --     require('mini.surround').setup()
+  --     local statusline = require 'mini.statusline'
+  --     statusline.setup { use_icons = true }
+  --     ---@diagnostic disable-next-line: duplicate-set-field
+  --     statusline.section_location = function()
+  --       return '%2l:%-2v'
+  --     end
+  --   end,
+  -- },
+  {
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
       ensure_installed = {
-        'bash',
-        'c',
-        'diff',
-        'html',
         'lua',
-        'luadoc',
-        'markdown',
-        'markdown_inline',
-        'query',
-        'vim',
-        'vimdoc',
         'typescript',
         'tsx',
-        'json',
-        'yaml',
       },
-      -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
         enable = true,
@@ -463,14 +491,9 @@ require('lazy').setup({
       indent = { enable = true, disable = { 'ruby' } },
     },
   },
-  {
-    'windwp/nvim-autopairs',
-    event = 'InsertEnter',
-    config = true,
-  },
 }, {
   ui = {
-    icons = vim.g.have_nerd_font and {} or {
+    icons = {} or {
       cmd = '⌘',
       config = '🛠',
       event = '📅',
@@ -488,6 +511,4 @@ require('lazy').setup({
   },
 })
 
--- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
 vim.keymap.set('n', '<leader>e', '<cmd>Ex<CR>', { desc = 'Open explorer' })
