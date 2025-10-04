@@ -59,12 +59,12 @@ local rtp = vim.opt.rtp
 rtp:prepend(lazypath)
 
 require('lazy').setup({
-  'NMAC427/guess-indent.nvim', -- Detect tabstop and shiftwidth automatically
+  'NMAC427/guess-indent.nvim',
   {
     'github/copilot.vim',
     event = 'InsertEnter',
   },
-  { -- Adds git related signs to the gutter, as well as utilities for managing changes
+  {
     'lewis6991/gitsigns.nvim',
     opts = {
       signs = {
@@ -76,12 +76,12 @@ require('lazy').setup({
       },
     },
   },
-  { -- Fuzzy Finder (files, lsp, etc)
+  {
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
     dependencies = {
       'nvim-lua/plenary.nvim',
-      { -- If encountering errors, see telescope-fzf-native README for installation instructions
+      {
         'nvim-telescope/telescope-fzf-native.nvim',
         build = 'make',
         cond = function()
@@ -134,9 +134,7 @@ require('lazy').setup({
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
 
-      -- Command+P to search git files (like VS Code)
       vim.keymap.set('n', '<C-p>', function()
-        -- Try git_files first, fallback to find_files if not in git repo
         local ok = pcall(builtin.git_files, { show_untracked = true })
         if not ok then
           builtin.find_files()
@@ -149,7 +147,6 @@ require('lazy').setup({
     ft = 'lua',
     opts = {
       library = {
-        -- Load luvit types when the `vim.uv` word is found
         { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
       },
     },
@@ -168,10 +165,8 @@ require('lazy').setup({
       'mason-org/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
-      -- Useful status updates for LSP.
       { 'j-hui/fidget.nvim', opts = {} },
 
-      -- Allows extra capabilities provided by blink.cmp
       'saghen/blink.cmp',
     },
     config = function()
@@ -237,8 +232,6 @@ require('lazy').setup({
         end,
       })
 
-      -- Diagnostic Config
-      -- See :help vim.diagnostic.Opts
       vim.diagnostic.config {
         severity_sort = true,
         float = { border = 'rounded', source = 'if_many' },
@@ -278,6 +271,20 @@ require('lazy').setup({
             },
           },
         },
+        ts_ls = {
+          settings = {
+            typescript = {
+              organizeImports = {
+                enable = true,
+              },
+            },
+            javascript = {
+              organizeImports = {
+                enable = true,
+              },
+            },
+          },
+        },
       }
 
       local ensure_installed = vim.tbl_keys(servers or {})
@@ -286,7 +293,6 @@ require('lazy').setup({
         'prettierd', -- Used to format JS/TS code
         'csharp-language-server',
         'csharp_ls',
-        'csharpier',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -294,7 +300,6 @@ require('lazy').setup({
         ensure_installed = {},
         automatic_installation = false,
         handlers = {
-          -- default handler
           function(server_name)
             local server = servers[server_name] or {}
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
@@ -304,8 +309,12 @@ require('lazy').setup({
       }
     end,
   },
-
-  { -- Autoformat
+  {
+    'pmizio/typescript-tools.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
+    opts = {},
+  },
+  {
     'stevearc/conform.nvim',
     event = { 'BufWritePre' },
     cmd = { 'ConformInfo' },
@@ -338,7 +347,7 @@ require('lazy').setup({
         typescript = { 'prettierd', 'prettier', stop_after_first = true },
         javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
         typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
-        csharp = { 'csharpier' },
+        cs = { 'csharpier' },
       },
     },
   },
@@ -415,8 +424,7 @@ require('lazy').setup({
       require('mini.ai').setup { n_lines = 500 }
       require('mini.surround').setup()
       local statusline = require 'mini.statusline'
-      -- set use_icons to true if you have a Nerd Font
-      statusline.setup { use_icons = vim.g.have_nerd_font }
+      statusline.setup { use_icons = true }
       ---@diagnostic disable-next-line: duplicate-set-field
       statusline.section_location = function()
         return '%2l:%-2v'
@@ -454,6 +462,11 @@ require('lazy').setup({
       },
       indent = { enable = true, disable = { 'ruby' } },
     },
+  },
+  {
+    'windwp/nvim-autopairs',
+    event = 'InsertEnter',
+    config = true,
   },
 }, {
   ui = {
