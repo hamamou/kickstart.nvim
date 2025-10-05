@@ -40,6 +40,40 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 vim.keymap.set('n', '<C-w>v', '<cmd>vsplit<CR>')
 vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
 
+local term_buf = nil
+
+vim.keymap.set('n', '<leader>t', function()
+  local shell_cmd
+  if vim.loop.os_uname().sysname:match 'Windows' then
+    if vim.fn.executable 'pwsh' == 1 then
+      shell_cmd = 'pwsh'
+    else
+      shell_cmd = 'powershell'
+    end
+  else
+    shell_cmd = vim.o.shell
+  end
+
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    if vim.bo[buf].buftype == 'terminal' then
+      vim.api.nvim_win_close(win, false)
+      return
+    end
+  end
+
+  if term_buf and vim.api.nvim_buf_is_valid(term_buf) then
+    vim.cmd 'botright split'
+    vim.api.nvim_win_set_buf(0, term_buf)
+  else
+    vim.cmd('botright split term://' .. shell_cmd)
+    term_buf = vim.api.nvim_get_current_buf()
+  end
+
+  vim.cmd 'resize 12'
+  vim.cmd 'startinsert'
+end, { desc = 'Toggle persistent bottom terminal (PowerShell on Windows)' })
+
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
@@ -394,56 +428,7 @@ require('lazy').setup({
       require('mini.files').setup()
       require('mini.indentscope').setup()
       require('mini.cursorword').setup()
-      require('mini.statusline').setup {
-        use_icons = true,
-        content = {
-          active = function()
-            local mode, mode_hl = MiniStatusline.section_mode { trunc_width = 120 }
-            local branch = vim.b.gitsigns_head or ''
-            local git_status = vim.b.gitsigns_status_dict or {}
-            local clients = vim.lsp.get_clients { bufnr = 0 }
-            local has_git_modifications = (
-              (git_status.added and git_status.added > 0)
-              or (git_status.changed and git_status.changed > 0)
-              or (git_status.removed and git_status.removed > 0)
-            )
-            local git_str = has_git_modifications and ' +' or ''
-
-            -- File path relative to Neovim root (cwd)
-            local filename = vim.fn.expand '%:.'
-
-            -- Active LSP client
-            local lsp = (#clients > 0) and clients[1].name or ''
-
-            -- Line | Column
-            local loc = string.format('%d|%d', vim.fn.line '.', vim.fn.col '.')
-
-            -- Left section: mode | branch | git (+) | filename
-            local left = MiniStatusline.combine_groups {
-              { hl = mode_hl, strings = { mode } },
-              {
-                hl = 'MiniStatuslineDevinfo',
-                strings = {
-                  branch ~= '' and (' ' .. branch .. git_str) or '',
-                },
-              },
-              { hl = 'MiniStatuslineFilename', strings = { ' ' .. filename } },
-            }
-
-            -- Right section: LSP | location
-            local right = MiniStatusline.combine_groups {
-              { hl = 'MiniStatuslineLsp', strings = { lsp } },
-              { hl = 'MiniStatuslineFilename', strings = { loc } },
-            }
-
-            return MiniStatusline.combine_groups {
-              { hl = 'MiniStatuslineModeNormal', strings = { left } },
-              '%=',
-              { hl = 'MiniStatuslineModeNormal', strings = { right } },
-            }
-          end,
-        },
-      }
+      require('mini.statusline').setup {}
 
       vim.keymap.set('n', '<leader>e', function()
         MiniFiles.open()
