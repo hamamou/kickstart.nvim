@@ -1,7 +1,7 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 vim.opt.termguicolors = true
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 vim.o.number = true
 vim.o.mouse = 'a'
 vim.o.showmode = false
@@ -12,6 +12,7 @@ vim.o.breakindent = true
 vim.o.undofile = true
 vim.o.ignorecase = true
 vim.o.smartcase = true
+vim.o.smartindent = true
 vim.o.signcolumn = 'yes'
 vim.o.updatetime = 250
 vim.o.timeoutlen = 300
@@ -23,8 +24,8 @@ vim.o.inccommand = 'split'
 vim.o.cursorline = true
 vim.o.scrolloff = 16
 vim.o.confirm = true
-vim.o.tabstop = 4
-vim.o.shiftwidth = 4
+vim.o.tabstop = 2
+vim.o.shiftwidth = 2
 vim.o.expandtab = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 vim.keymap.set('n', '<C-s>', '<cmd>w<CR>', { desc = 'Save file' })
@@ -36,14 +37,8 @@ vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left wind
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
-
-vim.api.nvim_create_autocmd('TextYankPost', {
-  desc = 'Highlight when yanking (copying) text',
-  group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
-  callback = function()
-    vim.hl.on_yank()
-  end,
-})
+vim.keymap.set('n', '<C-w>v', '<cmd>vsplit<CR>')
+vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
 
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
@@ -397,6 +392,8 @@ require('lazy').setup({
       require('mini.pairs').setup()
       require('mini.bracketed').setup()
       require('mini.files').setup()
+      require('mini.indentscope').setup()
+      require('mini.cursorword').setup()
       require('mini.statusline').setup {
         use_icons = true,
         content = {
@@ -404,9 +401,7 @@ require('lazy').setup({
             local mode, mode_hl = MiniStatusline.section_mode { trunc_width = 120 }
             local branch = vim.b.gitsigns_head or ''
             local git_status = vim.b.gitsigns_status_dict or {}
-            local clients = vim.lsp.get_active_clients { bufnr = 0 }
-
-            -- Single + if there are any git modifications
+            local clients = vim.lsp.get_clients { bufnr = 0 }
             local has_git_modifications = (
               (git_status.added and git_status.added > 0)
               or (git_status.changed and git_status.changed > 0)
@@ -416,9 +411,6 @@ require('lazy').setup({
 
             -- File path relative to Neovim root (cwd)
             local filename = vim.fn.expand '%:.'
-            if filename == '' then
-              filename = '[No Name]'
-            end
 
             -- Active LSP client
             local lsp = (#clients > 0) and clients[1].name or ''
@@ -452,31 +444,16 @@ require('lazy').setup({
           end,
         },
       }
-      -- require('mini.move').setup()
 
       vim.keymap.set('n', '<leader>e', function()
         MiniFiles.open()
       end, { desc = 'Open MiniFiles' })
     end,
   },
-  -- {
-  --   'echasnovski/mini.nvim',
-  --   config = function()
-  --     require('mini.ai').setup { n_lines = 500 }
-  --     require('mini.surround').setup()
-  --     local statusline = require 'mini.statusline'
-  --     statusline.setup { use_icons = true }
-  --     ---@diagnostic disable-next-line: duplicate-set-field
-  --     statusline.section_location = function()
-  --       return '%2l:%-2v'
-  --     end
-  --   end,
-  -- },
   {
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
-    main = 'nvim-treesitter.configs', -- Sets main module to use for opts
-    -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
+    main = 'nvim-treesitter.configs',
     opts = {
       ensure_installed = {
         'lua',
@@ -486,9 +463,8 @@ require('lazy').setup({
       auto_install = true,
       highlight = {
         enable = true,
-        additional_vim_regex_highlighting = { 'ruby' },
       },
-      indent = { enable = true, disable = { 'ruby' } },
+      indent = { enable = true },
     },
   },
 }, {
@@ -510,5 +486,3 @@ require('lazy').setup({
     },
   },
 })
-
-vim.keymap.set('n', '<leader>e', '<cmd>Ex<CR>', { desc = 'Open explorer' })
