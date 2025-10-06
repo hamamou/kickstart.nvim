@@ -38,7 +38,7 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 vim.keymap.set('n', '<C-w>v', '<cmd>vsplit<CR>')
 vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
-
+vim.keymap.set('n', '<C-w>c', '<cmd>bd', { desc = 'Close current buffer' })
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
@@ -107,7 +107,19 @@ require('lazy').setup({
       pcall(require('telescope').load_extension, 'ui-select')
 
       local builtin = require 'telescope.builtin'
-      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      vim.keymap.set('n', '<leader>sg', function()
+        require('telescope.builtin').live_grep {
+          additional_args = function(_)
+            return {
+              '--hidden',
+              '--glob',
+              '!.git/*',
+              '--glob',
+              '!node_modules/*',
+            }
+          end,
+        }
+      end, { desc = '[S]earch by [G]rep (including hidden files, excluding .git & node_modules)' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
@@ -422,6 +434,36 @@ require('lazy').setup({
       },
       indent = { enable = true },
     },
+  },
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      local harpoon = require 'harpoon'
+      harpoon:setup()
+
+      vim.keymap.set('n', '<leader>a', function()
+        harpoon:list():add()
+        vim.notify('File added to Harpoon', vim.log.levels.INFO)
+      end, { desc = '[A]dd file to Harpoon' })
+      vim.keymap.set('n', '<M-1>', function()
+        harpoon:list():select(1)
+      end, { desc = 'Harpoon file 1' })
+      vim.keymap.set('n', '<M-2>', function()
+        harpoon:list():select(2)
+      end, { desc = 'Harpoon file 2' })
+      vim.keymap.set('n', '<M-3>', function()
+        harpoon:list():select(3)
+      end, { desc = 'Harpoon file 3' })
+      vim.keymap.set('n', '<M-4>', function()
+        harpoon:list():select(4)
+      end, { desc = 'Harpoon file 4' })
+      -- Toggle Harpoon quick menu
+      vim.keymap.set('n', '<C-e>', function()
+        harpoon.ui:toggle_quick_menu(harpoon:list())
+      end)
+    end,
   },
 }, {
   ui = {
