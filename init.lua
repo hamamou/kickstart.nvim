@@ -29,10 +29,9 @@ vim.o.shiftwidth = 2
 vim.o.expandtab = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 vim.keymap.set('n', '<C-s>', '<cmd>w<CR>', { desc = 'Save file' })
-vim.keymap.set('i', '<C-s>', '<Esc><cmd>w<CR>a', { desc = 'Save file' })
+vim.keymap.set('i', '<C-s>', '<Esc><cmd>w<CR>', { desc = 'Save file' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-vim.keymap.set('n', '<leader>e', '<cmd>Ex<CR>', { desc = 'Open explorer' })
 vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
@@ -40,39 +39,13 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 vim.keymap.set('n', '<C-w>v', '<cmd>vsplit<CR>')
 vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
 
-local term_buf = nil
-
-vim.keymap.set('n', '<leader>t', function()
-  local shell_cmd
-  if vim.loop.os_uname().sysname:match 'Windows' then
-    if vim.fn.executable 'pwsh' == 1 then
-      shell_cmd = 'pwsh'
-    else
-      shell_cmd = 'powershell'
-    end
-  else
-    shell_cmd = vim.o.shell
-  end
-
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    local buf = vim.api.nvim_win_get_buf(win)
-    if vim.bo[buf].buftype == 'terminal' then
-      vim.api.nvim_win_close(win, false)
-      return
-    end
-  end
-
-  if term_buf and vim.api.nvim_buf_is_valid(term_buf) then
-    vim.cmd 'botright split'
-    vim.api.nvim_win_set_buf(0, term_buf)
-  else
-    vim.cmd('botright split term://' .. shell_cmd)
-    term_buf = vim.api.nvim_get_current_buf()
-  end
-
-  vim.cmd 'resize 12'
-  vim.cmd 'startinsert'
-end, { desc = 'Toggle persistent bottom terminal (PowerShell on Windows)' })
+vim.api.nvim_create_autocmd('TextYankPost', {
+  desc = 'Highlight when yanking (copying) text',
+  group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
+  callback = function()
+    vim.hl.on_yank()
+  end,
+})
 
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
@@ -135,6 +108,7 @@ require('lazy').setup({
 
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
@@ -174,9 +148,7 @@ require('lazy').setup({
       { 'mason-org/mason.nvim', opts = {} },
       'mason-org/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
-
       { 'j-hui/fidget.nvim', opts = {} },
-
       'saghen/blink.cmp',
     },
     config = function()
@@ -197,7 +169,7 @@ require('lazy').setup({
 
           ---@param client vim.lsp.Client
           ---@param method vim.lsp.protocol.Method
-          ---@param bufnr? integer some lsp support methods only in specific files
+          ---@param bufnr? integer
           ---@return boolean
           local function client_supports_method(client, method, bufnr)
             if vim.fn.has 'nvim-0.11' == 1 then
@@ -313,7 +285,6 @@ require('lazy').setup({
   {
     'pmizio/typescript-tools.nvim',
     dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
-    opts = {},
   },
   {
     'stevearc/conform.nvim',
