@@ -39,6 +39,10 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 vim.keymap.set('n', '<C-w>v', '<cmd>vsplit<CR>')
 vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
 vim.keymap.set('n', '<C-w>c', '<cmd>bd', { desc = 'Close current buffer' })
+vim.keymap.set({ 'n', 'x' }, '<leader>ff', function()
+  require('grug-far').open { prefills = { search = vim.fn.expand '<cword>' } }
+end, { desc = 'grug-far: Search within range' })
+
 vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
@@ -409,7 +413,9 @@ require('lazy').setup({
       require('mini.pairs').setup()
       require('mini.bracketed').setup()
       require('mini.files').setup()
-      require('mini.indentscope').setup()
+      require('mini.indentscope').setup {
+        symbol = '|',
+      }
       require('mini.cursorword').setup()
       require('mini.statusline').setup {}
 
@@ -465,6 +471,40 @@ require('lazy').setup({
       end)
     end,
   },
+  {
+    'MagicDuck/grug-far.nvim',
+    config = function()
+      require('grug-far').setup {
+        mappings = {
+          prev = 'g[',
+          next = 'g]',
+          preview = 'gp',
+          close = 'q',
+        },
+      }
+    end,
+  },
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+  },
+  {
+    'kdheepak/lazygit.nvim',
+    lazy = true,
+    cmd = {
+      'LazyGit',
+      'LazyGitConfig',
+      'LazyGitCurrentFile',
+      'LazyGitFilter',
+      'LazyGitFilterCurrentFile',
+    },
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    keys = {
+      { '<leader>g', '<cmd>LazyGit<cr>', desc = 'LazyGit' },
+    },
+  },
+  { 'hiphish/rainbow-delimiters.nvim' },
 }, {
   ui = {
     icons = {} or {
