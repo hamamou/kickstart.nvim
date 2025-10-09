@@ -32,8 +32,8 @@ vim.keymap.set('n', '<C-s>', '<cmd>w<CR>', { desc = 'Save file' })
 vim.keymap.set('i', '<C-s>', '<Esc><cmd>w<CR>', { desc = 'Save file' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-vim.keymap.set('n', '<C-j>', '<cmd>cnext<CR>zz', { desc = 'Go to next quickfix' })
-vim.keymap.set('n', '<C-k>', '<cmd>cprev<CR>zz', { desc = 'Go to previous quickfix' })
+vim.keymap.set('n', '<C-j>', '<cmd>cnext<CR>', { desc = 'Go to next quickfix' })
+vim.keymap.set('n', '<C-k>', '<cmd>cprev<CR>', { desc = 'Go to previous quickfix' })
 vim.keymap.set('n', '<C-w>v', '<cmd>vsplit<CR>')
 vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
 vim.keymap.set('n', '<C-w>c', '<cmd>bd<CR>', { desc = 'Close current buffer' })
@@ -411,7 +411,26 @@ require('lazy').setup({
             require('mini.surround').setup()
             require('mini.pairs').setup()
             require('mini.bracketed').setup()
-            require('mini.files').setup()
+            require('mini.files').setup {
+                content = {
+                    filter = function(entry)
+                        local exclude = { 'bin', 'Bin', 'obj', 'node_modules', '.vs', '.git', '.githook' }
+                        for _, name in ipairs(exclude) do
+                            if entry.name == name then
+                                return false
+                            end
+                        end
+                        return true
+                    end,
+                },
+                windows = {
+                    preview = true,
+                    width_preview = 100,
+                },
+                options = {
+                    use_as_default_explorer = true,
+                },
+            }
             require('mini.indentscope').setup {
                 symbol = '|',
             }
@@ -419,8 +438,11 @@ require('lazy').setup({
             require('mini.statusline').setup {}
 
             vim.keymap.set('n', '<leader>e', function()
-                MiniFiles.open()
-            end, { desc = 'Open MiniFiles' })
+                local buf_name = vim.api.nvim_buf_get_name(0)
+                local path = vim.fn.filereadable(buf_name) == 1 and buf_name or vim.fn.getcwd()
+                MiniFiles.open(path)
+                MiniFiles.reveal_cwd()
+            end, { desc = 'Open Mini Files' })
         end,
     },
     {
@@ -447,7 +469,6 @@ require('lazy').setup({
         config = function()
             local harpoon = require 'harpoon'
             harpoon:setup()
-
             vim.keymap.set('n', '<leader>a', function()
                 harpoon:list():add()
                 vim.notify('File added to Harpoon', vim.log.levels.INFO)
@@ -464,9 +485,11 @@ require('lazy').setup({
             vim.keymap.set('n', '<M-4>', function()
                 harpoon:list():select(4)
             end, { desc = 'Harpoon file 4' })
-            -- Toggle Harpoon quick menu
             vim.keymap.set('n', '<C-e>', function()
                 harpoon.ui:toggle_quick_menu(harpoon:list())
+            end)
+            vim.keymap.set('n', '<C-c>', function()
+                harpoon:list():clear()
             end)
         end,
     },
@@ -504,43 +527,7 @@ require('lazy').setup({
         },
     },
     {
-        'NickvanDyke/opencode.nvim',
-        dependencies = {
-            -- Recommended for `ask()`, required for `toggle()` — otherwise optional
-            { 'folke/snacks.nvim', opts = { input = { enabled = true } } },
-        },
-        config = function()
-            vim.opt.autoread = true
-
-            -- Recommended/example keymaps
-            vim.keymap.set({ 'n', 'x' }, '<leader>oa', function()
-                require('opencode').ask('@this: ', { submit = true })
-            end, { desc = 'Ask about this' })
-            vim.keymap.set({ 'n', 'x' }, '<leader>o+', function()
-                require('opencode').prompt '@this'
-            end, { desc = 'Add this' })
-            vim.keymap.set({ 'n', 'x' }, '<leader>oe', function()
-                require('opencode').prompt('Explain @this and its context', { submit = true })
-            end, { desc = 'Explain this' })
-            vim.keymap.set({ 'n', 'x' }, '<leader>os', function()
-                require('opencode').select()
-            end, { desc = 'Select prompt' })
-            vim.keymap.set('n', '<leader>ot', function()
-                require('opencode').toggle()
-            end, { desc = 'Toggle embedded' })
-            vim.keymap.set('n', '<leader>on', function()
-                require('opencode').command 'session_new'
-            end, { desc = 'New session' })
-            vim.keymap.set('n', '<leader>oi', function()
-                require('opencode').command 'session_interrupt'
-            end, { desc = 'Interrupt session' })
-            vim.keymap.set('n', '<S-C-u>', function()
-                require('opencode').command 'messages_half_page_up'
-            end, { desc = 'Messages half page up' })
-            vim.keymap.set('n', '<S-C-d>', function()
-                require('opencode').command 'messages_half_page_down'
-            end, { desc = 'Messages half page down' })
-        end,
+        'f-person/git-blame.nvim',
     },
 }, {
     ui = {
