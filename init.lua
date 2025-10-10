@@ -41,6 +41,22 @@ vim.keymap.set({ 'n', 'x' }, '<leader>ff', function()
     require('grug-far').open { prefills = { search = vim.fn.expand '<cword>' } }
 end, { desc = 'grug-far: Search within range' })
 
+vim.keymap.set('n', '<leader>gb', function()
+    local relpath = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':.')
+
+    local line_num = vim.fn.line '.'
+
+    local blame_cmd = string.format('git log -1 -L %d,%d:%s --no-patch --format="%%an | %%s | %%cr"', line_num, line_num, relpath)
+    local output = vim.fn.systemlist(blame_cmd)
+    vim.notify(table.concat(output, '\n'), vim.log.levels.INFO, { title = 'Git Blame' })
+end, { desc = '[G]it [B]lame current line' })
+
+vim.keymap.set('n', '<M-r>', function()
+    local relpath = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':.')
+    vim.fn.setreg('+', relpath)
+    vim.notify('Copied relative path to clipboard: ' .. relpath, vim.log.levels.INFO)
+end, { desc = 'Copy relative path of current file to clipboard' })
+
 vim.api.nvim_create_autocmd('TextYankPost', {
     desc = 'Highlight when yanking (copying) text',
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
@@ -66,7 +82,7 @@ require('lazy').setup({
     'NMAC427/guess-indent.nvim',
     {
         'github/copilot.vim',
-        event = 'InsertEnter',
+        event = 'VimEnter',
     },
     {
         'lewis6991/gitsigns.nvim',
@@ -525,9 +541,6 @@ require('lazy').setup({
         keys = {
             { '<leader>g', '<cmd>LazyGit<cr>', desc = 'LazyGit' },
         },
-    },
-    {
-        'f-person/git-blame.nvim',
     },
 }, {
     ui = {
