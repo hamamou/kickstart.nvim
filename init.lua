@@ -41,6 +41,36 @@ vim.keymap.set({ 'n', 'x' }, '<leader>ff', function()
     require('grug-far').open { prefills = { search = vim.fn.expand '<cword>' } }
 end, { desc = 'grug-far: Search within range' })
 
+vim.keymap.set('n', '<C-b>', function()
+    print 'Building...'
+    local output = vim.fn.systemlist 'dotnet build -nologo -consoleloggerparameters:NoSummary'
+    local exit_code = vim.v.shell_error
+
+    local errors = {}
+    for _, line in ipairs(output) do
+        if line:match 'error' then
+            table.insert(errors, line)
+        end
+    end
+
+    vim.fn.setqflist({}, 'r', {
+        title = 'dotnet build errors',
+        lines = errors,
+    })
+
+    if #errors > 0 or exit_code ~= 0 then
+        vim.cmd 'copen'
+    else
+        vim.cmd 'cclose'
+        print '✅ Build succeeded'
+    end
+end, { desc = 'Build .NET project' })
+
+vim.opt.shell = 'powershell'
+vim.opt.shellcmdflag = '-NoProfile -ExecutionPolicy RemoteSigned -Command'
+vim.opt.shellquote = '"'
+vim.opt.shellxquote = ''
+
 vim.keymap.set('n', '<leader>gb', function()
     local relpath = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':.')
 
