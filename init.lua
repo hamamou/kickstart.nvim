@@ -57,6 +57,8 @@ vim.keymap.set('n', '<M-r>', function()
     vim.notify('Copied relative path to clipboard: ' .. relpath, vim.log.levels.INFO)
 end, { desc = 'Copy relative path of current file to clipboard' })
 
+vim.g.dotnet_errors_only = true
+vim.g.dotnet_show_project_file = false
 vim.api.nvim_create_autocmd('TextYankPost', {
     desc = 'Highlight when yanking (copying) text',
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
@@ -479,35 +481,19 @@ require('lazy').setup({
         },
     },
     {
-        'ThePrimeagen/harpoon',
-        branch = 'harpoon2',
-        dependencies = { 'nvim-lua/plenary.nvim' },
-        config = function()
-            local harpoon = require 'harpoon'
-            harpoon:setup()
-            vim.keymap.set('n', '<leader>a', function()
-                harpoon:list():add()
-                vim.notify('File added to Harpoon', vim.log.levels.INFO)
-            end, { desc = '[A]dd file to Harpoon' })
-            vim.keymap.set('n', '<M-1>', function()
-                harpoon:list():select(1)
-            end, { desc = 'Harpoon file 1' })
-            vim.keymap.set('n', '<M-2>', function()
-                harpoon:list():select(2)
-            end, { desc = 'Harpoon file 2' })
-            vim.keymap.set('n', '<M-3>', function()
-                harpoon:list():select(3)
-            end, { desc = 'Harpoon file 3' })
-            vim.keymap.set('n', '<M-4>', function()
-                harpoon:list():select(4)
-            end, { desc = 'Harpoon file 4' })
-            vim.keymap.set('n', '<C-e>', function()
-                harpoon.ui:toggle_quick_menu(harpoon:list())
-            end)
-            vim.keymap.set('n', '<C-c>', function()
-                harpoon:list():clear()
-            end)
-        end,
+        'cbochs/grapple.nvim',
+        opts = {
+            scope = 'git',
+        },
+        event = { 'BufReadPost', 'BufNewFile' },
+        cmd = 'Grapple',
+        keys = {
+            { '<leader>a', '<cmd>Grapple toggle<cr>', desc = 'Grapple toggle tag' },
+            { '<C-e>', '<cmd>Grapple toggle_tags<cr>', desc = 'Grapple open tags window' },
+            { '<M-1>', '<cmd>Grapple select index=1<CR>' },
+            { '<M-2>', '<cmd>Grapple select index=2<CR>' },
+            { '<M-3>', '<cmd>Grapple select index=3<CR>' },
+        },
     },
     {
         'MagicDuck/grug-far.nvim',
