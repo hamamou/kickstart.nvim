@@ -66,6 +66,7 @@ vim.keymap.set('n', '<C-b>', function()
     end
 end, { desc = 'Build .NET project' })
 
+vim.keymap.set('n', '<C-q>', '<cmd>copen<CR>', { desc = 'Open quickfix list' })
 vim.opt.shell = 'powershell'
 vim.opt.shellcmdflag = '-NoProfile -ExecutionPolicy RemoteSigned -Command'
 vim.opt.shellquote = '"'
