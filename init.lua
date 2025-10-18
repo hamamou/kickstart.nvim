@@ -3,6 +3,7 @@ vim.g.maplocalleader = ' '
 vim.opt.termguicolors = true
 vim.g.have_nerd_font = true
 vim.o.number = true
+vim.o.relativenumber = true
 vim.o.mouse = 'a'
 vim.o.showmode = false
 vim.schedule(function()
@@ -15,7 +16,7 @@ vim.o.smartcase = true
 vim.o.smartindent = true
 vim.o.signcolumn = 'yes'
 vim.o.updatetime = 250
-vim.o.timeoutlen = 300
+vim.o.timeoutlen = 500
 vim.o.splitright = true
 vim.o.splitbelow = true
 vim.o.list = true
@@ -36,7 +37,6 @@ vim.keymap.set('n', '<C-j>', '<cmd>cnext<CR>', { desc = 'Go to next quickfix' })
 vim.keymap.set('n', '<C-k>', '<cmd>cprev<CR>', { desc = 'Go to previous quickfix' })
 vim.keymap.set('n', '<C-w>v', '<cmd>vsplit<CR>')
 vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
-vim.keymap.set('n', '<C-w>c', '<cmd>bd<CR>', { desc = 'Close current buffer' })
 vim.keymap.set({ 'n', 'x' }, '<leader>ff', function()
     require('grug-far').open { prefills = { search = vim.fn.expand '<cword>' } }
 end, { desc = 'grug-far: Search within range' })
@@ -524,6 +524,8 @@ require('lazy').setup({
             { '<M-1>', '<cmd>Grapple select index=1<CR>' },
             { '<M-2>', '<cmd>Grapple select index=2<CR>' },
             { '<M-3>', '<cmd>Grapple select index=3<CR>' },
+            { '<M-4>', '<cmd>Grapple select index=4<CR>' },
+            { '<M-5>', '<cmd>Grapple select index=5<CR>' },
         },
     },
     {
