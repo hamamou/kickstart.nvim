@@ -37,9 +37,8 @@ vim.keymap.set('n', '<C-j>', '<cmd>cnext<CR>', { desc = 'Go to next quickfix' })
 vim.keymap.set('n', '<C-k>', '<cmd>cprev<CR>', { desc = 'Go to previous quickfix' })
 vim.keymap.set('n', '<C-w>v', '<cmd>vsplit<CR>')
 vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
-vim.keymap.set({ 'n', 'x' }, '<leader>ff', function()
-    require('grug-far').open { prefills = { search = vim.fn.expand '<cword>' } }
-end, { desc = 'grug-far: Search within range' })
+vim.keymap.set('v', '>', '>gv', { desc = 'Indent and keep selection' })
+vim.keymap.set('v', '<', '<gv', { desc = 'Unindent and keep selection' })
 
 vim.keymap.set('n', '<C-b>', function()
     print 'Building...'
@@ -174,7 +173,7 @@ require('lazy').setup({
             vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
             vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
             vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
-
+            vim.keymap.set('n', '<leader>rs', builtin.resume, { desc = '[R]esume [S]earch' })
             vim.keymap.set('n', '<leader>sf', function()
                 builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
                     winblend = 10,
@@ -515,6 +514,9 @@ require('lazy').setup({
         'cbochs/grapple.nvim',
         opts = {
             scope = 'git',
+            win_opts = {
+                width = 120,
+            },
         },
         event = { 'BufReadPost', 'BufNewFile' },
         cmd = 'Grapple',
@@ -527,19 +529,6 @@ require('lazy').setup({
             { '<M-4>', '<cmd>Grapple select index=4<CR>' },
             { '<M-5>', '<cmd>Grapple select index=5<CR>' },
         },
-    },
-    {
-        'MagicDuck/grug-far.nvim',
-        config = function()
-            require('grug-far').setup {
-                mappings = {
-                    prev = 'g[',
-                    next = 'g]',
-                    preview = 'gp',
-                    close = 'q',
-                },
-            }
-        end,
     },
     {
         'nvim-treesitter/nvim-treesitter-context',
