@@ -40,6 +40,11 @@ vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
 vim.keymap.set('v', '>', '>gv', { desc = 'Indent and keep selection' })
 vim.keymap.set('v', '<', '<gv', { desc = 'Unindent and keep selection' })
 
+vim.keymap.set('n', '<leader>gf', function()
+    vim.cmd "cexpr systemlist('git diff --name-only')"
+    vim.cmd 'copen'
+end, { desc = 'Show git changed files in quickfix window' })
+
 vim.keymap.set('n', '<C-b>', function()
     print 'Building...'
     local output = vim.fn.systemlist 'dotnet build -nologo -consoleloggerparameters:NoSummary'
@@ -472,7 +477,6 @@ require('lazy').setup({
                     end,
                 },
                 windows = {
-                    preview = true,
                     width_preview = 100,
                 },
                 options = {
