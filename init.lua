@@ -40,6 +40,7 @@ vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
 vim.keymap.set('v', '>', '>gv', { desc = 'Indent and keep selection' })
 vim.keymap.set('v', '<', '<gv', { desc = 'Unindent and keep selection' })
 
+vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
 vim.keymap.set('n', '<leader>gf', function()
     vim.cmd "cexpr systemlist('git diff --name-only')"
     vim.cmd 'copen'
@@ -464,37 +465,6 @@ require('lazy').setup({
             require('mini.surround').setup()
             require('mini.pairs').setup()
             require('mini.bracketed').setup()
-            require('mini.files').setup {
-                content = {
-                    filter = function(entry)
-                        local exclude = { 'bin', 'Bin', 'obj', 'node_modules', '.vs', '.git', '.githook' }
-                        for _, name in ipairs(exclude) do
-                            if entry.name == name then
-                                return false
-                            end
-                        end
-                        return true
-                    end,
-                },
-                windows = {
-                    width_preview = 100,
-                },
-                options = {
-                    use_as_default_explorer = true,
-                },
-            }
-            require('mini.indentscope').setup {
-                symbol = '|',
-            }
-            require('mini.cursorword').setup()
-            require('mini.statusline').setup {}
-
-            vim.keymap.set('n', '<leader>e', function()
-                local buf_name = vim.api.nvim_buf_get_name(0)
-                local path = vim.fn.filereadable(buf_name) == 1 and buf_name or vim.fn.getcwd()
-                MiniFiles.open(path)
-                MiniFiles.reveal_cwd()
-            end, { desc = 'Open Mini Files' })
         end,
     },
     {
@@ -553,6 +523,28 @@ require('lazy').setup({
         keys = {
             { '<leader>g', '<cmd>LazyGit<cr>', desc = 'LazyGit' },
         },
+    },
+    {
+        'stevearc/oil.nvim',
+        ---@module 'oil'
+        ---@type oil.SetupOpts
+        opts = {
+            view_options = {
+                show_hidden = true,
+                is_always_hidden = function(name, _)
+                    return name == 'node_modules' or name == '.git' or name == 'obj' or name == 'bin'
+                end,
+            },
+            keymaps = {
+                ['<C-p>'] = false,
+            },
+        },
+        dependencies = { { 'nvim-mini/mini.icons', opts = {} } },
+        lazy = false,
+        setup = function(_, opts)
+            require('oil').setup(opts)
+            vim.keymap.set('n', '<leader>e', '<CMD>Oil<CR>', { desc = 'Open Oil file explorer' })
+        end,
     },
 }, {
     ui = {
