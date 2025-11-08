@@ -40,12 +40,7 @@ vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
 vim.keymap.set('v', '>', '>gv', { desc = 'Indent and keep selection' })
 vim.keymap.set('v', '<', '<gv', { desc = 'Unindent and keep selection' })
 
-vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
-vim.keymap.set('n', '<leader>gf', function()
-    vim.cmd "cexpr systemlist('git diff --name-only')"
-    vim.cmd 'copen'
-end, { desc = 'Show git changed files in quickfix window' })
-
+vim.keymap.set('n', '<leader>e', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
 vim.keymap.set('n', '<C-b>', function()
     print 'Building...'
     local output = vim.fn.systemlist 'dotnet build -nologo -consoleloggerparameters:NoSummary'
@@ -545,6 +540,53 @@ require('lazy').setup({
             require('oil').setup(opts)
             vim.keymap.set('n', '<leader>e', '<CMD>Oil<CR>', { desc = 'Open Oil file explorer' })
         end,
+    },
+    {
+        'folke/snacks.nvim',
+        priority = 1000,
+        lazy = false,
+        ---@type snacks.Config
+        opts = {
+            bigfile = { enabled = true },
+            quickfile = { enabled = true },
+            gh = {},
+            picker = {
+                sources = {
+                    gh_issue = {},
+                    gh_pr = {},
+                },
+            },
+        },
+        keys = {
+            {
+                '<leader>gi',
+                function()
+                    Snacks.picker.gh_issue()
+                end,
+                desc = 'GitHub Issues (open)',
+            },
+            {
+                '<leader>gI',
+                function()
+                    Snacks.picker.gh_issue { state = 'all' }
+                end,
+                desc = 'GitHub Issues (all)',
+            },
+            {
+                '<leader>gp',
+                function()
+                    Snacks.picker.gh_pr()
+                end,
+                desc = 'GitHub Pull Requests (open)',
+            },
+            {
+                '<leader>gP',
+                function()
+                    Snacks.picker.gh_pr { state = 'all' }
+                end,
+                desc = 'GitHub Pull Requests (all)',
+            },
+        },
     },
 }, {
     ui = {
