@@ -39,7 +39,9 @@ vim.keymap.set('n', '<C-w>v', '<cmd>vsplit<CR>')
 vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
 vim.keymap.set('v', '>', '>gv', { desc = 'Indent and keep selection' })
 vim.keymap.set('v', '<', '<gv', { desc = 'Unindent and keep selection' })
-
+vim.keymap.set('n', '<C-d>', '<C-d>zz', { desc = 'Scroll down and center cursor' })
+vim.keymap.set('n', '<C-u>', '<C-u>zz', { desc = 'Scroll up and center cursor' })
+vim.keymap.set('v', '<leader>s', ':sort<CR>', { desc = 'Sort selected lines' })
 vim.keymap.set('n', '<leader>e', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
 vim.keymap.set('n', '<C-b>', function()
     print 'Building...'
@@ -454,12 +456,13 @@ require('lazy').setup({
     },
     {
         'nvim-mini/mini.nvim',
-        event = 'VeryLazy',
+        event = 'VimEnter',
         config = function()
             require('mini.ai').setup()
             require('mini.surround').setup()
             require('mini.pairs').setup()
             require('mini.bracketed').setup()
+            require('mini.statusline').setup()
         end,
     },
     {
@@ -536,57 +539,6 @@ require('lazy').setup({
         },
         dependencies = { { 'nvim-mini/mini.icons', opts = {} } },
         lazy = false,
-        setup = function(_, opts)
-            require('oil').setup(opts)
-            vim.keymap.set('n', '<leader>e', '<CMD>Oil<CR>', { desc = 'Open Oil file explorer' })
-        end,
-    },
-    {
-        'folke/snacks.nvim',
-        priority = 1000,
-        lazy = false,
-        ---@type snacks.Config
-        opts = {
-            bigfile = { enabled = true },
-            quickfile = { enabled = true },
-            gh = {},
-            picker = {
-                sources = {
-                    gh_issue = {},
-                    gh_pr = {},
-                },
-            },
-        },
-        keys = {
-            {
-                '<leader>gi',
-                function()
-                    Snacks.picker.gh_issue()
-                end,
-                desc = 'GitHub Issues (open)',
-            },
-            {
-                '<leader>gI',
-                function()
-                    Snacks.picker.gh_issue { state = 'all' }
-                end,
-                desc = 'GitHub Issues (all)',
-            },
-            {
-                '<leader>gp',
-                function()
-                    Snacks.picker.gh_pr()
-                end,
-                desc = 'GitHub Pull Requests (open)',
-            },
-            {
-                '<leader>gP',
-                function()
-                    Snacks.picker.gh_pr { state = 'all' }
-                end,
-                desc = 'GitHub Pull Requests (all)',
-            },
-        },
     },
 }, {
     ui = {
