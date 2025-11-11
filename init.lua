@@ -13,7 +13,7 @@ vim.o.breakindent = true
 vim.o.undofile = true
 vim.o.ignorecase = true
 vim.o.smartcase = true
-vim.o.smartindent = true
+vim.o.autoindent = true
 vim.o.signcolumn = 'yes'
 vim.o.updatetime = 250
 vim.o.timeoutlen = 500
@@ -25,8 +25,6 @@ vim.o.inccommand = 'split'
 vim.o.cursorline = true
 vim.o.scrolloff = 16
 vim.o.confirm = true
-vim.o.tabstop = 4
-vim.o.shiftwidth = 4
 vim.o.expandtab = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 vim.keymap.set('n', '<C-s>', '<cmd>w<CR>', { desc = 'Save file' })
@@ -115,6 +113,11 @@ rtp:prepend(lazypath)
 
 require('lazy').setup({
     'NMAC427/guess-indent.nvim',
+    -- Lazy.nvim
+    {
+        'tpope/vim-sleuth',
+        lazy = false,
+    },
     {
         'github/copilot.vim',
         event = 'VimEnter',
@@ -384,6 +387,7 @@ require('lazy').setup({
                 typescript = { 'prettierd', 'prettier', stop_after_first = true },
                 javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
                 typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+                json = { 'prettierd', 'prettier', stop_after_first = true },
                 cs = { 'csharpier' },
             },
         },
