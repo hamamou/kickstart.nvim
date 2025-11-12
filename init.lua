@@ -74,6 +74,12 @@ vim.keymap.set('n', '<C-q>', '<cmd>copen<CR>', { desc = 'Open quickfix list' })
 vim.keymap.set('n', '<C-w>v', '<cmd>vsplit<CR>')
 vim.keymap.set('n', '<C-w>s', '<cmd>split<CR>')
 
+-- resize splits
+vim.keymap.set('n', '<C-Left>', '<cmd>vertical resize -5<CR>', { desc = 'Resize split left' })
+vim.keymap.set('n', '<C-Right>', '<cmd>vertical resize +5<CR>', { desc = 'Resize split right' })
+vim.keymap.set('n', '<C-Up>', '<cmd>resize +5<CR>', { desc = 'Resize split up' })
+vim.keymap.set('n', '<C-Down>', '<cmd>resize -5<CR>', { desc = 'Resize split down' })
+
 -- Visual mode tweaks
 vim.keymap.set('v', '>', '>gv', { desc = 'Indent and keep selection' })
 vim.keymap.set('v', '<', '<gv', { desc = 'Unindent and keep selection' })
@@ -480,13 +486,35 @@ require('lazy').setup({
         dependencies = { 'nvim-lua/plenary.nvim' },
         keys = { { '<leader>g', '<cmd>LazyGit<cr>', desc = 'LazyGit' } },
     },
+    {
+        'NeogitOrg/neogit',
+        dependencies = {
+            'nvim-lua/plenary.nvim', -- required
+            'sindrets/diffview.nvim', -- optional - Diff integration
 
+            -- Only one of these is needed.
+            'nvim-telescope/telescope.nvim', -- optional
+        },
+    },
     -- 🤖 Copilot
     {
         'github/copilot.vim',
         event = 'VimEnter',
     },
 
+    {
+        'CopilotC-Nvim/CopilotChat.nvim',
+        dependencies = {
+            { 'nvim-lua/plenary.nvim', branch = 'master' },
+        },
+        build = 'make tiktoken',
+        opts = {},
+        keys = {
+            { '<leader>cc', '<cmd>CopilotChat<cr>', mode = 'n', desc = 'Open Copilot Chat' },
+            { '<leader>ce', '<cmd>CopilotChatExplain<cr>', mode = 'v', desc = 'Explain code in Copilot Chat' },
+            { '<leader>cg', '<cmd>CopilotCommit<cr>', mode = 'n', desc = 'Commit code suggestion from Copilot' },
+        },
+    },
     -- 🧱 Mini plugins
     {
         'nvim-mini/mini.nvim',
