@@ -140,15 +140,6 @@ vim.keymap.set('n', '<C-b>', function()
     end
 end, { desc = 'Build .NET project' })
 
--- Git helpers
-vim.keymap.set('n', '<leader>gb', function()
-    local relpath = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':.')
-    local line = vim.fn.line '.'
-    local cmd = string.format('git log -1 -L %d,%d:%s --no-patch --format="%%an | %%s | %%cr"', line, line, relpath)
-    local output = vim.fn.systemlist(cmd)
-    vim.notify(table.concat(output, '\n'), vim.log.levels.INFO, { title = 'Git Blame' })
-end, { desc = '[G]it [B]lame current line' })
-
 -- Copy relative file path
 vim.keymap.set('n', '<M-r>', function()
     local relpath = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ':.')
@@ -468,6 +459,7 @@ require('lazy').setup({
     {
         'lewis6991/gitsigns.nvim',
         opts = {
+            current_line_blame = true,
             signs = {
                 add = { text = '+' },
                 change = { text = '~' },
@@ -482,16 +474,6 @@ require('lazy').setup({
         cmd = { 'LazyGit', 'LazyGitCurrentFile', 'LazyGitFilter', 'LazyGitFilterCurrentFile' },
         dependencies = { 'nvim-lua/plenary.nvim' },
         keys = { { '<leader>g', '<cmd>LazyGit<cr>', desc = 'LazyGit' } },
-    },
-    {
-        'NeogitOrg/neogit',
-        dependencies = {
-            'nvim-lua/plenary.nvim', -- required
-            'sindrets/diffview.nvim', -- optional - Diff integration
-
-            -- Only one of these is needed.
-            'nvim-telescope/telescope.nvim', -- optional
-        },
     },
     -- 🤖 Copilot
     {
