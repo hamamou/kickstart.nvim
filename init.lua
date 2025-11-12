@@ -93,15 +93,13 @@ vim.keymap.set('n', '<leader>e', '<CMD>Oil<CR>', { desc = 'Open parent directory
 
 -- Helper to get a unique session path based on current repo or folder
 local function get_session_path()
-    -- Try Git root first
-    local git_root = vim.fn.systemlist('git rev-parse --show-toplevel')[1]
-    local base = git_root and #git_root > 0 and git_root or vim.loop.cwd()
+    local git_output = vim.fn.systemlist 'git rev-parse --show-toplevel'
+    local git_root = vim.v.shell_error == 0 and git_output[1] or nil
+    local base = git_root or vim.loop.cwd()
 
-    -- Session storage folder
     local session_dir = vim.fn.stdpath 'data' .. '\\sessions'
     vim.fn.mkdir(session_dir, 'p')
 
-    -- Normalize path (Windows safe)
     local session_name = base:gsub(':', ''):gsub('\\', '_'):gsub('/', '_')
     return session_dir .. '\\' .. session_name .. '.vim'
 end
@@ -112,7 +110,6 @@ vim.keymap.set('n', '<leader>ss', function()
     vim.cmd('mksession! ' .. vim.fn.fnameescape(session_path))
     vim.notify('💾 Session saved: ' .. session_path, vim.log.levels.INFO)
 end, { desc = 'Save session for current repo' })
-
 -- 🔄 Load session
 vim.keymap.set('n', '<leader>sl', function()
     local session_path = get_session_path()
@@ -508,7 +505,9 @@ require('lazy').setup({
             { 'nvim-lua/plenary.nvim', branch = 'master' },
         },
         build = 'make tiktoken',
-        opts = {},
+        opts = {
+            model = 'gpt-5-codex',
+        },
         keys = {
             { '<leader>cc', '<cmd>CopilotChat<cr>', mode = 'n', desc = 'Open Copilot Chat' },
             { '<leader>ce', '<cmd>CopilotChatExplain<cr>', mode = 'v', desc = 'Explain code in Copilot Chat' },
