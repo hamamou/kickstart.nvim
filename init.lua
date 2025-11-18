@@ -6,6 +6,7 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.g.lazygit_use_neovim_remote = 1
 -- UI Settings
 vim.opt.termguicolors = true
 vim.opt.number = true
@@ -20,6 +21,7 @@ vim.opt.breakindent = true
 vim.opt.confirm = true
 vim.opt.updatetime = 250
 vim.opt.timeoutlen = 500
+vim.opt.winborder = 'rounded'
 
 -- Indentation
 vim.opt.expandtab = true
@@ -87,7 +89,9 @@ vim.keymap.set('v', '<leader>s', ':sort<CR>', { desc = 'Sort selected lines' })
 
 -- Terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-
+vim.keymap.set('n', '<leader>cr', [[:%s/\r//g<CR>]], {
+    desc = 'Remove ^M (CR) from file',
+})
 -- Oil
 vim.keymap.set('n', '<leader>e', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
 
@@ -121,24 +125,15 @@ vim.keymap.set('n', '<leader>sl', function()
     end
 end, { desc = 'Load session for current repo' })
 
--- Build .NET projects
-vim.keymap.set('n', '<C-b>', function()
-    print 'Building...'
-    local output = vim.fn.systemlist 'dotnet build -nologo -consoleloggerparameters:NoSummary'
-    local exit_code = vim.v.shell_error
-
-    local errors = vim.tbl_filter(function(line)
-        return line:match 'error'
-    end, output)
-
-    vim.fn.setqflist({}, 'r', { title = 'dotnet build errors', lines = errors })
-    if #errors > 0 or exit_code ~= 0 then
-        vim.cmd 'copen'
-    else
-        vim.cmd 'cclose'
-        print '✅ Build succeeded'
-    end
-end, { desc = 'Build .NET project' })
+vim.api.nvim_create_autocmd('VimEnter', {
+    callback = function()
+        local builtin = require 'telescope.builtin'
+        local ok = pcall(builtin.git_files, { show_untracked = true })
+        if not ok then
+            builtin.find_files()
+        end
+    end,
+})
 
 -- Copy relative file path
 vim.keymap.set('n', '<M-r>', function()
@@ -234,7 +229,20 @@ require('lazy').setup({
             local telescope = require 'telescope'
             local builtin = require 'telescope.builtin'
             telescope.setup {
-                extensions = { ['ui-select'] = require('telescope.themes').get_dropdown() },
+                defaults = {
+                    layout_strategy = 'vertical',
+                    layout_config = {
+                        vertical = {
+                            width = 0.9,
+                            height = 0.9,
+                            preview_height = 0.55, -- preview at the bottom (bigger or smaller as you want)
+                            prompt_position = 'top', -- keep prompt at the top
+                        },
+                    },
+                },
+                extensions = {
+                    ['ui-select'] = require('telescope.themes').get_dropdown(),
+                },
             }
             pcall(telescope.load_extension, 'fzf')
             pcall(telescope.load_extension, 'ui-select')
@@ -252,10 +260,6 @@ require('lazy').setup({
             vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch recent files' })
             vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = 'Find existing buffers' })
             vim.keymap.set('n', '<leader>rs', builtin.resume, { desc = '[R]esume [S]earch' })
-            vim.keymap.set('n', '<leader>sf', function()
-                builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown { winblend = 10, previewer = false })
-            end, { desc = 'Fuzzy search in current buffer' })
-
             vim.keymap.set('n', '<C-p>', function()
                 local ok = pcall(builtin.git_files, { show_untracked = true })
                 if not ok then
@@ -291,6 +295,59 @@ require('lazy').setup({
             'saghen/blink.cmp',
         },
         config = function()
+            --
+            vim.api.nvim_create_autocmd('LspAttach', {
+                group = vim.api.nvim_create_augroup('kickstart-lsp-attach', { clear = true }),
+                callback = function(event)
+                    local map = function(keys, func, desc, mode)
+                        mode = mode or 'n'
+                        vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
+                    end
+
+                    map('grn', vim.lsp.buf.rename, '[R]e[n]ame')
+                    map('ga', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
+                    map('grr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
+                    map('gi', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
+                    map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+                    map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+
+                    ---@param client vim.lsp.Client
+                    ---@param method vim.lsp.protocol.Method
+                    ---@param bufnr? integer
+                    ---@return boolean
+                    local function client_supports_method(client, method, bufnr)
+                        if vim.fn.has 'nvim-0.11' == 1 then
+                            return client:supports_method(method, bufnr)
+                        else
+                            return client.supports_method(method, { bufnr = bufnr })
+                        end
+                    end
+
+                    local client = vim.lsp.get_client_by_id(event.data.client_id)
+                    if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
+                        local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
+                        vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+                            buffer = event.buf,
+                            group = highlight_augroup,
+                            callback = vim.lsp.buf.document_highlight,
+                        })
+
+                        vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+                            buffer = event.buf,
+                            group = highlight_augroup,
+                            callback = vim.lsp.buf.clear_references,
+                        })
+
+                        vim.api.nvim_create_autocmd('LspDetach', {
+                            group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
+                            callback = function(event2)
+                                vim.lsp.buf.clear_references()
+                                vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
+                            end,
+                        })
+                    end
+                end,
+            })
             -- diagnostics
             vim.diagnostic.config {
                 severity_sort = true,
@@ -481,21 +538,6 @@ require('lazy').setup({
         event = 'VimEnter',
     },
 
-    {
-        'CopilotC-Nvim/CopilotChat.nvim',
-        dependencies = {
-            { 'nvim-lua/plenary.nvim', branch = 'master' },
-        },
-        build = 'make tiktoken',
-        opts = {
-            model = 'gpt-5-codex',
-        },
-        keys = {
-            { '<leader>cc', '<cmd>CopilotChat<cr>', mode = 'n', desc = 'Open Copilot Chat' },
-            { '<leader>ce', '<cmd>CopilotChatExplain<cr>', mode = 'v', desc = 'Explain code in Copilot Chat' },
-            { '<leader>cg', '<cmd>CopilotCommit<cr>', mode = 'n', desc = 'Commit code suggestion from Copilot' },
-        },
-    },
     -- 🧱 Mini plugins
     {
         'nvim-mini/mini.nvim',
@@ -506,6 +548,7 @@ require('lazy').setup({
             require('mini.surround').setup()
             require('mini.pairs').setup()
             require('mini.bracketed').setup()
+            require('mini.indentscope').setup()
             require('mini.statusline').setup()
         end,
     },
