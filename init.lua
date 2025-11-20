@@ -128,7 +128,7 @@ end, { desc = 'Load session for current repo' })
 vim.api.nvim_create_autocmd('VimEnter', {
     callback = function()
         local builtin = require 'telescope.builtin'
-        local ok = pcall(builtin.git_files, { show_untracked = true })
+        local ok = pcall(builtin.oldfiles)
         if not ok then
             builtin.find_files()
         end
@@ -497,7 +497,7 @@ require('lazy').setup({
         'cbochs/grapple.nvim',
         opts = {
             scope = 'git',
-            win_opts = { width = 120 },
+            win_opts = { width = 160 },
         },
         event = { 'BufReadPost', 'BufNewFile' },
         cmd = 'Grapple',
